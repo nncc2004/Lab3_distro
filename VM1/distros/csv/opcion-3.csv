@@ -1,0 +1,5 @@
+actividad_id;ubicacion;peligrosidad;integrantes;fecha_emision
+A1;Puerto;Alta;Nico,Vale;2026-10-15T22:10:00
+A2;Centro;Media;Nico;2026-10-15T22:11:00
+A4;Sur;Alta;Leo;2026-10-15T22:13:00
+A2;Centro;Media;Nico;2026-10-15T22:11:00
