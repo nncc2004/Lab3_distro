@@ -1,0 +1,24 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: lab3-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      
+  agente:
+    build: ./agente
+    container_name: lab3-agente
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+volumes:
+  rabbitmq_data:

@@ -1,0 +1,25 @@
+services:
+  #parte de la BD
+  mysql:
+    image: mysql:8
+    container_name: lab3-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  
+  # parte de los distros
+  distros:
+    build: ./distros
+    container_name: lab3-distros
+    restart: unless-stopped
+    environment:
+      ARCHIVO_CSV: ${ARCHIVO_CSV}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+volumes:
+  mysql_data:
