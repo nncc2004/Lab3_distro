@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	pb "lab3-shared/proto/nameserver"
 	"log"
 	"net"
@@ -292,7 +291,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("[NAMESERVER] Escuchando en puerto %s", puerto)
+	log.Printf("[NAMESERVER] Escuchando en puerto %s", puerto)
 
 	// Iniciar servidor
 	if err := servidor.Serve(listener); err != nil {

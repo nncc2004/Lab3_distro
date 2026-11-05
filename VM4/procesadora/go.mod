@@ -1,4 +1,4 @@
-module lab3/procesadora3
+module lab3/procesadora
 
 go 1.27.0
 

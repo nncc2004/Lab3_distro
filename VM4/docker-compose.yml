@@ -1,0 +1,14 @@
+services:
+  procesadora:
+    build:
+      context: ..
+      dockerfile: VM3/procesadora/Dockerfile
+    container_name: lab3-procesadora-${PROCESSOR_ID}
+    restart: unless-stopped
+    environment:
+      PROCESSOR_ID: ${PROCESSOR_ID}
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
+      VM_IP: ${VM_IP}
+      NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
+    ports:
+      - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
