@@ -1,7 +1,19 @@
-FROM golang:1.27-alpine
+FROM golang:1.27-alpine AS builder
+
 WORKDIR /app
-COPY go.mod go.sum ./
+
+COPY shared/ ./shared/
+COPY VM2/agente/ ./VM2/agente/
+
+WORKDIR /app/VM2/agente
+
 RUN go mod download
-COPY *.go ./
-RUN go build -o agente .
+RUN CGO_ENABLED=0 GOOS=linux go build -o agente .
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/VM2/agente/agente .
+
 CMD ["./agente"]
