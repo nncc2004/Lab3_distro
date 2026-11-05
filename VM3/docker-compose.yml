@@ -1,0 +1,11 @@
+services:
+  nameserver:
+    build:
+      context: ..
+      dockerfile: VM3/nameserver/Dockerfile
+    container_name: lab3-nameserver
+    restart: unless-stopped
+    environment:
+      NAMESERVER_PORT: ${NAMESERVER_PORT}
+    ports:
+      - "${NAMESERVER_PORT}:${NAMESERVER_PORT}"
