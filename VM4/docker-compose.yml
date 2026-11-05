@@ -2,7 +2,7 @@ services:
   procesadora:
     build:
       context: ..
-      dockerfile: VM3/procesadora/Dockerfile
+      dockerfile: VM4/procesadora/Dockerfile
     container_name: lab3-procesadora-${PROCESSOR_ID}
     restart: unless-stopped
     environment:
@@ -12,3 +12,32 @@ services:
       NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
     ports:
       - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
+  cuartel:
+    build:
+      context: ..
+      dockerfile: VM4/cuartel/Dockerfile
+    container_name: cuartel
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      CUARTEL_PORT: ${CUARTEL_PORT}
+      VM_IP: ${VM_IP}
+      NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
+    ports:
+      - "${CUARTEL_PORT}:${CUARTEL_PORT}"
+
+  #tests de aquí en adelante, borrar leugo 
+  # prueba-bd:
+  #   build:
+  #     context: ./prueba-bd
+  #   container_name: prueba-bd
+  #   environment:
+  #     MYSQL_HOST: ${MYSQL_HOST}
+  #     MYSQL_PORT: ${MYSQL_PORT}
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE}
+  #     MYSQL_USER: ${MYSQL_USER}
+  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD}

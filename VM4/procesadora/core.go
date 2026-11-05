@@ -12,6 +12,8 @@ import (
 	ns "lab3-shared/proto/nameserver"
 	pb "lab3-shared/proto/processing"
 
+	cuartelpb "lab3-shared/proto/cuartel"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -212,11 +214,77 @@ func (c *Core) EnviarActividad(
 	return nil
 }
 
+// func (c *Core) ProcesarActividad(
+// 	ctx context.Context,
+// 	req *pb.ProcesarActividadRequest,
+// ) (*pb.ProcesarActividadResponse, error) {
+// 	// recibe una actividad asignada y la entrega a cuartel
+
+// 	if req == nil || req.Actividad == nil {
+// 		return &pb.ProcesarActividadResponse{
+// 			Exito:   false,
+// 			Mensaje: "La actividad recibida es invalida",
+// 		}, nil
+// 	}
+
+// 	log.Printf("[PROCESADORA-%d] Actividad recibida para procesamiento: ID=%s",
+// 		c.ID, req.Actividad.ActividadId)
+
+// 	// direccion de cuartel
+// 	direccionCuartel, err := c.Naming.ResolverCuartel()
+// 	if err != nil {
+// 		log.Printf("[PROCESADORA-%d] Cuartel no encontrado en NameServer. Actividad %s descartada: %v",
+// 			c.ID, req.Actividad.ActividadId, err)
+
+// 		return &pb.ProcesarActividadResponse{
+// 			Exito:   false,
+// 			Mensaje: "Cuartel no encontrado. Actividad descartada",
+// 		}, nil
+// 	}
+
+// 	// conexion con cuartel
+// 	conn, err := grpc.NewClient(
+// 		direccionCuartel,
+// 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+// 	)
+// 	if err != nil {
+// 		log.Printf("[PROCESADORA-%d] Error conectando con Cuartel. Actividad %s descartada: %v",
+// 			c.ID, req.Actividad.ActividadId, err)
+
+// 		return &pb.ProcesarActividadResponse{
+// 			Exito:   false,
+// 			Mensaje: "Error conectando con Cuartel. Actividad descartada",
+// 		}, nil
+// 	}
+// 	defer conn.Close()
+
+// 	cliente := pb.NewProcesamientoClient(conn)
+
+// 	// manda la actividad a cuartel
+// 	ctxEntrega, cancel := context.WithTimeout(ctx, 5*time.Second)
+// 	defer cancel()
+
+// 	respuesta, err := cliente.ProcesarActividad(ctxEntrega, req)
+// 	if err != nil {
+// 		log.Printf("[PROCESADORA-%d] Cuartel no respondió. Actividad %s descartada: %v",
+// 			c.ID, req.Actividad.ActividadId, err)
+
+// 		return &pb.ProcesarActividadResponse{
+// 			Exito:   false,
+// 			Mensaje: "Cuartel no respondió. Actividad descartada",
+// 		}, nil
+// 	}
+
+// 	log.Printf("[PROCESADORA-%d] Actividad %s entregada al Cuartel",
+// 		c.ID, req.Actividad.ActividadId)
+
+// 	return respuesta, nil
+// }
+
 func (c *Core) ProcesarActividad(
 	ctx context.Context,
 	req *pb.ProcesarActividadRequest,
 ) (*pb.ProcesarActividadResponse, error) {
-	// recibe una actividad asignada y la entrega a cuartel
 
 	if req == nil || req.Actividad == nil {
 		return &pb.ProcesarActividadResponse{
@@ -225,56 +293,81 @@ func (c *Core) ProcesarActividad(
 		}, nil
 	}
 
+	actividadID := req.Actividad.ActividadId
+
 	log.Printf("[PROCESADORA-%d] Actividad recibida para procesamiento: ID=%s",
-		c.ID, req.Actividad.ActividadId)
+		c.ID, actividadID)
 
-	// direccion de cuartel
-	direccionCuartel, err := c.Naming.ResolverCuartel()
-	if err != nil {
-		log.Printf("[PROCESADORA-%d] Cuartel no encontrado en NameServer. Actividad %s descartada: %v",
-			c.ID, req.Actividad.ActividadId, err)
+	// Reintenta hasta que cuartel confirme la recepción
+	for {
+		// Verifica si la solicitud original sigue vigente
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 
-		return &pb.ProcesarActividadResponse{
-			Exito:   false,
-			Mensaje: "Cuartel no encontrado. Actividad descartada",
-		}, nil
+		// Resuelve nuevamente la dirección del Cuartel
+		direccionCuartel, err := c.Naming.ResolverCuartel()
+		if err != nil {
+			log.Printf("[PROCESADORA-%d] No se pudo encontrar al Cuartel. Actividad %s. Reintentando...",
+				c.ID, actividadID)
+		} else {
+
+			// Establece la conexión
+			conn, err := grpc.NewClient(
+				direccionCuartel,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+			)
+
+			if err != nil {
+				log.Printf("[PROCESADORA-%d] Error conectando con Cuartel: %v",
+					c.ID, err)
+			} else {
+				cliente := cuartelpb.NewCuartelClient(conn)
+
+				actividad := &cuartelpb.Actividad{
+					ActividadId:  req.Actividad.ActividadId,
+					Ubicacion:    req.Actividad.Ubicacion,
+					Peligrosidad: req.Actividad.Peligrosidad,
+					Integrantes:  req.Actividad.Integrantes,
+					FechaEmision: req.Actividad.FechaEmision,
+				}
+
+				ctxEntrega, cancel := context.WithTimeout(ctx, 5*time.Second)
+
+				_, err = cliente.RecibirActividad(
+					ctxEntrega,
+					&cuartelpb.RecibirActividadRequest{
+						Actividad: actividad,
+					},
+				)
+
+				cancel()
+				conn.Close()
+
+				if err == nil {
+					log.Printf("[PROCESADORA-%d] Actividad %s entregada al Cuartel",
+						c.ID, actividadID)
+
+					return &pb.ProcesarActividadResponse{
+						Exito:   true,
+						Mensaje: "Actividad entregada al Cuartel",
+					}, nil
+				}
+
+				log.Printf("[PROCESADORA-%d] Cuartel no respondió. Actividad %s. Reintentando: %v",
+					c.ID, actividadID, err)
+			}
+		}
+
+		// Espera antes de realizar un nuevo intento
+		temporizador := time.NewTimer(3 * time.Second)
+
+		select {
+		case <-ctx.Done():
+			temporizador.Stop()
+			return nil, ctx.Err()
+
+		case <-temporizador.C:
+		}
 	}
-
-	// conexion con cuartel
-	conn, err := grpc.NewClient(
-		direccionCuartel,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Printf("[PROCESADORA-%d] Error conectando con Cuartel. Actividad %s descartada: %v",
-			c.ID, req.Actividad.ActividadId, err)
-
-		return &pb.ProcesarActividadResponse{
-			Exito:   false,
-			Mensaje: "Error conectando con Cuartel. Actividad descartada",
-		}, nil
-	}
-	defer conn.Close()
-
-	cliente := pb.NewProcesamientoClient(conn)
-
-	// manda la actividad a cuartel
-	ctxEntrega, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	respuesta, err := cliente.ProcesarActividad(ctxEntrega, req)
-	if err != nil {
-		log.Printf("[PROCESADORA-%d] Cuartel no respondió. Actividad %s descartada: %v",
-			c.ID, req.Actividad.ActividadId, err)
-
-		return &pb.ProcesarActividadResponse{
-			Exito:   false,
-			Mensaje: "Cuartel no respondió. Actividad descartada",
-		}, nil
-	}
-
-	log.Printf("[PROCESADORA-%d] Actividad %s entregada al Cuartel",
-		c.ID, req.Actividad.ActividadId)
-
-	return respuesta, nil
 }

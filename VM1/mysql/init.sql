@@ -1,3 +1,8 @@
+CREATE USER IF NOT EXISTS 'cuartel'@'%'
+IDENTIFIED BY '12345678_cuartel';
+
+GRANT SELECT, INSERT ON lab3_bd.* TO 'cuartel'@'%';
+
 CREATE TABLE actividades (
     actividad_id VARCHAR(64) NOT NULL,
     ubicacion VARCHAR(255) NOT NULL,

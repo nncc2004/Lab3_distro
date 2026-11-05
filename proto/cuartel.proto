@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package cuartel;
+
+option go_package = "lab3-shared/proto/cuartel";
+
+service Cuartel {
+    rpc RecibirActividad(RecibirActividadRequest)
+        returns (RecibirActividadResponse);
+
+    rpc ConsultarActividades(ConsultarActividadesRequest)
+        returns (ConsultarActividadesResponse);
+}
+
+message Actividad {
+    string actividad_id = 1;
+    string ubicacion = 2;
+    string peligrosidad = 3;
+    repeated string integrantes = 4;
+    string fecha_emision = 5;
+}
+
+message RecibirActividadRequest {
+    Actividad actividad = 1;
+}
+
+message RecibirActividadResponse {
+    bool recibida = 1;
+}
+
+message ConsultarActividadesRequest {
+}
+
+message ConsultarActividadesResponse {
+    repeated Actividad actividades = 1;
+}
