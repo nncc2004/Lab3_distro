@@ -1,0 +1,10 @@
+// Define el servicio de recepción de actividades y su comunicación
+// entre el Agente Secreto, las procesadoras y el Cuartel Policial.
+
+syntax = "proto3";
+
+package processing;
+
+option go_package = "lab3-shared/proto/processing";
+
+// Mensajes y servicios por definir

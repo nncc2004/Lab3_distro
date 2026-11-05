@@ -1,0 +1,10 @@
+// Define los servicios de coordinación entre procesadoras:
+// elección de líder mediante Bully, notificación de coordinador y heartbeat.
+
+syntax = "proto3";
+
+package procesadora;
+
+option go_package = "lab3-shared/proto/procesadora";
+
+// Mensajes y servicios por definir

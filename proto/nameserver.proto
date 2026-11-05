@@ -1,0 +1,53 @@
+
+syntax = "proto3";
+
+package nameserver;
+
+option go_package = "lab3-shared/proto/nameserver";
+
+//servicios
+message RegistrarRequest {
+    string nombre = 1;
+    string direccion = 2;
+}
+
+message RegistrarResponse {}
+
+// Renovación de registros
+message RenovarRequest {
+    string nombre = 1;
+}
+
+message RenovarResponse {}
+
+
+
+message ResolverRequest {
+    string nombre = 1;
+}
+
+message ResolverResponse {
+    string direccion = 1;
+}
+
+// Listado de servicios por prefijo
+message ListarRequest {
+    string prefijo = 1;
+}
+
+message Servicio {
+    string nombre = 1;
+    string direccion = 2;
+}
+
+message ListarResponse {
+    repeated Servicio servicios = 1;
+}
+
+//NameServer
+service NameServer {
+    rpc RegistrarRPC(RegistrarRequest) returns (RegistrarResponse);
+    rpc RenovarRPC(RenovarRequest) returns (RenovarResponse);
+    rpc ResolverRPC(ResolverRequest) returns (ResolverResponse);
+    rpc ListarRPC(ListarRequest) returns (ListarResponse);
+}
