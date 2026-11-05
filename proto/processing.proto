@@ -1,5 +1,5 @@
-// Define el servicio de recepción de actividades y su comunicación
-// entre el Agente Secreto, las procesadoras y el Cuartel Policial.
+// recepción de actividades y su comunicación
+// entre Agente, procesadoras y Cuartel
 
 syntax = "proto3";
 
@@ -7,4 +7,30 @@ package processing;
 
 option go_package = "lab3-shared/proto/processing";
 
-// Mensajes y servicios por definir
+//Contrato
+
+message Actividad {
+    string actividad_id = 1;
+    string ubicacion = 2;
+    string peligrosidad = 3;
+    repeated string integrantes = 4;
+    string fecha_emision = 5;
+}
+
+message ProcesarActividadRequest {
+    Actividad actividad = 1;
+}
+
+
+message ProcesarActividadResponse {
+    bool exito = 1;
+    string mensaje = 2;
+}
+
+service Procesamiento {
+    // El Agente entrega una actividad al líder
+    rpc RecibirActividad(ProcesarActividadRequest) returns (ProcesarActividadResponse);
+
+    // El líder asigna una actividad a una procesadora y esta se la entrega al Cuartel
+    rpc ProcesarActividad(ProcesarActividadRequest) returns (ProcesarActividadResponse);
+}

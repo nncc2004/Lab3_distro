@@ -59,16 +59,24 @@ func (d *diccionario) registrar(nombre string, direccion string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if _, existe := d.registros[nombre]; existe {
-		return errors.New("el nombre ya se encuentra registrado")
-	}
-
 	d.registros[nombre] = registro{
 		direccion:  direccion,
 		expiracion: time.Now().Add(10 * time.Second),
 	}
-	log.Printf("[NAMESERVER] Registro creado: %s -> %s", nombre, direccion)
+
+	log.Printf("[NAMESERVER] Registro creado o actualizado: %s -> %s", nombre, direccion)
 	return nil
+
+	// if _, existe := d.registros[nombre]; existe {
+	// 	return errors.New("el nombre ya se encuentra registrado")
+	// }
+
+	// d.registros[nombre] = registro{
+	// 	direccion:  direccion,
+	// 	expiracion: time.Now().Add(10 * time.Second),
+	// }
+	// log.Printf("[NAMESERVER] Registro creado: %s -> %s", nombre, direccion)
+	// return nil
 }
 
 func (d *diccionario) renovar(nombre string) error {

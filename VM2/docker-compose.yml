@@ -11,7 +11,7 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-      
+
   agente:
     build: ./agente
     container_name: lab3-agente
@@ -20,5 +20,58 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
     depends_on:
       - rabbitmq
+
+  procesadora:
+    build:
+      context: ..
+      dockerfile: VM2/procesadora/Dockerfile
+    container_name: lab3-procesadora-1
+    restart: unless-stopped
+    environment:
+      PROCESSOR_ID: ${PROCESSOR_ID}
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
+      VM_IP: ${VM_IP}
+      NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
+    ports:
+      - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
+
+  #De aquí en adelante se borra luego!
+  procesadora2:
+    build:
+      context: ..
+      dockerfile: VM2/procesadora2/Dockerfile
+    container_name: lab3-procesadora-2
+    restart: unless-stopped
+    environment:
+      PROCESSOR_ID: ${PROCESSOR_ID_2}
+      PROCESSOR_PORT: ${PROCESSOR_PORT_2}
+      VM_IP: ${VM_IP}
+      NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
+    ports:
+      - "${PROCESSOR_PORT_2}:${PROCESSOR_PORT_2}"
+
+  procesadora3:
+    build:
+      context: ..
+      dockerfile: VM2/procesadora3/Dockerfile
+    container_name: lab3-procesadora-3
+    restart: unless-stopped
+    environment:
+      PROCESSOR_ID: ${PROCESSOR_ID_3}
+      PROCESSOR_PORT: ${PROCESSOR_PORT_3}
+      VM_IP: ${VM_IP}
+      NAMESERVER_ADDRESS: ${NAMESERVER_ADDRESS}
+    ports:
+      - "${PROCESSOR_PORT_3}:${PROCESSOR_PORT_3}"
+  
+  agente-prueba:
+    build:
+      context: ..
+      dockerfile: VM2/prueba_agente/Dockerfile
+    container_name: lab3-agente-prueba
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   rabbitmq_data:

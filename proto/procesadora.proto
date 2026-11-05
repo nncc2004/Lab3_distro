@@ -1,5 +1,5 @@
-// Define los servicios de coordinación entre procesadoras:
-// elección de líder mediante Bully, notificación de coordinador y heartbeat.
+// coordinación entre procesadoras:
+// elección de líder (Bully), notificación de coordinador y heartbeat.
 
 syntax = "proto3";
 
@@ -7,4 +7,40 @@ package procesadora;
 
 option go_package = "lab3-shared/proto/procesadora";
 
-// Mensajes y servicios por definir
+
+//Contratos
+
+//solicitud
+message EleccionRequest {
+    int32 id_procesadora = 1;
+}
+
+// erspuesta
+message EleccionResponse {
+    bool aceptada = 1;
+}
+
+// Notificación de nuevo líder
+message CoordinadorRequest {
+    int32 id_lider = 1;
+}
+
+// recepción del nuevo lider
+message CoordinadorResponse {
+    bool recibido = 1;
+}
+
+// comprobación de disponibilidad líder
+message PingRequest {}
+
+// response a la comprobación de disponibilidad
+message PingResponse {
+    bool disponible = 1;
+}
+
+// coordinación entre procesadoras
+service Procesadora {
+    rpc Eleccion(EleccionRequest) returns (EleccionResponse);
+    rpc Coordinador(CoordinadorRequest) returns (CoordinadorResponse);
+    rpc Ping(PingRequest) returns (PingResponse);
+}
