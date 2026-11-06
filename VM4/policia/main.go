@@ -16,10 +16,6 @@ import (
 
 const nombreCuartel = "gamma.almacenamiento.cuartel"
 
-// ==========================================
-// NAMING CLIENT
-// ==========================================
-
 type NamingClient struct {
 	cliente  pbNaming.NameServerClient
 	conexion *grpc.ClientConn
@@ -170,7 +166,7 @@ func consultarOpcion(scanner *bufio.Scanner) int {
 }
 
 func main() {
-	// 1. Obtener la dirección del servidor Naming.
+
 	direccionNS := os.Getenv("NAMESERVER_ADDRESS")
 
 	if direccionNS == "" {
@@ -178,7 +174,6 @@ func main() {
 		return
 	}
 
-	// 2. Crear el cliente Naming.
 	naming, err := NewNamingClient(direccionNS)
 	if err != nil {
 		fmt.Printf("[POLICIA] Error creando cliente Naming: %v\n", err)
@@ -188,7 +183,6 @@ func main() {
 
 	fmt.Println("[POLICIA] Cliente Naming creado.")
 
-	// 3. Comprobar disponibilidad de Naming y registro de Cuartel.
 	fmt.Println("[POLICIA] Esperando disponibilidad de Naming y Cuartel...")
 
 	for {
@@ -204,7 +198,6 @@ func main() {
 		break
 	}
 
-	// 4. Iniciar el menú.
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
