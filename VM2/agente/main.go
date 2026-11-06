@@ -78,6 +78,29 @@ func leerActividad(mensajes <-chan amqp.Delivery) (Actividad, error) {
 	return actividad, nil
 }
 
+func notificarDisponibilidad(canal *amqp.Channel) error {
+	mensaje := []byte("AGENTE_DISPONIBLE")
+
+	err := canal.Publish(
+		"",
+		"gamma.ready",
+		true,
+		false,
+		amqp.Publishing{
+			ContentType:  "text/plain",
+			DeliveryMode: amqp.Persistent,
+			Body:         mensaje,
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("error notificando disponibilidad: %w", err)
+	}
+
+	log.Println("[AGENTE] Disponibilidad notificada a Los Distros")
+	return nil
+}
+
 // DEsde aquí viene lo del NS y gRPC
 func conectarNameServer() (ns.NameServerClient, *grpc.ClientConn, error) {
 	//Inicia el gRPC y se conecta al nameserver
@@ -233,6 +256,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// cola disponibilidad
+	_, err = canal.QueueDeclare(
+		"gamma.ready",
+		true,  // durable
+		false, // autoDelete
+		false, // exclusive
+		false, // noWait
+		nil,
+	)
+
+	if err != nil {
+		log.Fatal("[AGENTE] Error al declarar cola de disponibilidad:", err)
+	}
+
 	// leer actovidades
 	mensajes, err := canal.Consume(
 		cola.Name,
@@ -245,6 +282,12 @@ func main() {
 	)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Notificar disponibilidad a Los Distros
+	err = notificarDisponibilidad(canal)
+	if err != nil {
+		log.Fatal("[AGENTE] Error notificando disponibilidad:", err)
 	}
 
 	log.Println("[AGENTE] Esperando actividades...")
@@ -267,22 +310,28 @@ func main() {
 }
 
 // func main() {
+// 	// conectar  NS
+// 	naming, connNS, err := conectarNameServer()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer connNS.Close()
 
+// 	// conectarRabbitMQ
 // 	conn, err := conectarRabbitMQ()
 // 	if err != nil {
 // 		log.Fatal(err)
 // 	}
 // 	defer conn.Close()
 
-// 	// Crear canal
-// 	canal, err2 := conn.Channel()
-// 	if err2 != nil {
-// 		log.Fatal(err2)
+// 	canal, err := conn.Channel()
+// 	if err != nil {
+// 		log.Fatal(err)
 // 	}
 // 	defer canal.Close()
 
-// 	// Declarar cola
-// 	cola, err3 := canal.QueueDeclare(
+// 	// cola rabbit
+// 	cola, err := canal.QueueDeclare(
 // 		"actividades",
 // 		true,
 // 		false,
@@ -290,12 +339,26 @@ func main() {
 // 		false,
 // 		nil,
 // 	)
-// 	if err3 != nil {
-// 		log.Fatal(err3)
+// 	if err != nil {
+// 		log.Fatal(err)
 // 	}
 
-// 	// Iniciar consumidor
-// 	mensajes, err4 := canal.Consume(
+// 	// cola disponibilidad
+// 	_, err = canal.QueueDeclare(
+// 		"gamma.ready",
+// 		true,  // durable
+// 		false, // autoDelete
+// 		false, // exclusive
+// 		false, // noWait
+// 		nil,
+// 	)
+
+// 	if err != nil {
+// 		log.Fatal("[AGENTE] Error al declarar cola de disponibilidad:", err)
+// 	}
+
+// 	// leer actovidades
+// 	mensajes, err := canal.Consume(
 // 		cola.Name,
 // 		"",
 // 		true,
@@ -304,19 +367,25 @@ func main() {
 // 		false,
 // 		nil,
 // 	)
-// 	if err4 != nil {
-// 		log.Fatal(err4)
+// 	if err != nil {
+// 		log.Fatal(err)
 // 	}
 
-// 	// Consumir actividades
-// 	for {
-// 		actividad, err5 := leerActividad(mensajes)
+// 	log.Println("[AGENTE] Esperando actividades...")
 
-// 		if err5 != nil {
-// 			log.Printf("[AGENTE] Error: %v", err5)
+// 	// entregar actividades
+// 	for {
+// 		actividad, err := leerActividad(mensajes)
+// 		if err != nil {
+// 			log.Printf("[AGENTE] Error al recibir actividad: %v", err)
 // 			continue
 // 		}
 
-// 		log.Printf("[AGENTE] Actividad: %+v", actividad)
+// 		log.Printf(
+// 			"[AGENTE] Procesando actividad recibida: %s",
+// 			actividad.ActividadID,
+// 		)
+
+// 		entregarActividad(naming, actividad)
 // 	}
 // }
