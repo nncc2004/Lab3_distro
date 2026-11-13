@@ -10,8 +10,8 @@ VM1:
   1. Los Distros
   2. BBDD MySQL
 - Instrucciones de ejecución:
-  . up: sudo make docker-VM1
-  . down: sudo make down-VM1
+  - up: sudo make docker-VM1
+  - down: sudo make down-VM1
 
 
 VM2:
