@@ -1,6 +1,8 @@
 Karina Aliaga 202373556-6
 Nicolás Chehade 202373508-6
 
+Para ejecutar una VM, se debe dirigir a LAB3_distro/VMX y seguir las instrucciones de ejecución detalladas a continuación. 
+
 Los detalles de las VMs son:
 VM1:
 - Detalles:
